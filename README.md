@@ -18,8 +18,15 @@ If the library does not exits, it will optionally notify you to your discord cha
 
 ## Using Docker Compose
 
+To boot the tool for the first time, you can just launch the script `./launch.sh`.
+Alternatively, you can install by issuing the command (**Disclaimer**: Please, change the Mongo database password):
 ```bash
 MONGODB_PASSWD=Test123 docker compose up -d # or execute ./launch.sh
+```
+
+After the infrastructure is deployed, you can run the CLI like this:
+
+```bash
 docker run --rm -it depscanner-web depscanner -h
 usage: usage: depscan.py [-h] (-d DOMAINS | -o ORGS | -r REPOS) [-s STARS] [-t TOKEN] [-P PROXY] [-W WEBHOOK] [-F] [-L {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
 
@@ -49,29 +56,45 @@ sources:
                         File containing GitHub repository names
 ```
 
-## From requirements.txt:
-If you know what you are doing and want to use your own mongo db, modify the "mongo" section of the config.yml file to connect to your database. Then you can install the requirements of the tool:
+## From requirements.txt (not recommended):
+If you know what you are doing and want to use your own mongo db, modify the "mongo" section of the config.yml file to connect to your database. 
+Then, you can install the requirements of the tool:
 ```bash
 pip install -r requirements.txt
 ```
 
-You can use the CLI now. If you want to start the web interface, execute:
+If you have your own Mongo instance and configured correctly the file "config.yml", you can use the CLI now and the results should be saved in your own database. 
+
+Optionally, if you want to start the web interface, execute:
 ```
 cd web
 flask run --port 8015
 ```
 
-### CLI
-When executed via CLI, the terminal will present the information about the status of the scan:
+## CLI
+If you installed the tool via `docker compose up -d`, you can run the CLI like this (providing your own list of domains to scan):
+```bash
+mkdir mylists
+cp mydomains.txt mylists/
+docker run -v $(PWD)/mylists:/app/mylists --rm -it depscanner-web depscanner -t <yourtoken> -d mylists/mydomains.txt -W <discord webhook>
+```
+
+The only mandatory flags are:
+* The input file, which can be a domain list (`-d`), an organisation name list (`-o`), or a list of GitHub repositories (`-r`)
+* A GitHub PAT token to access their API (It can work without a GitHub PAT, but the rate limiting is much more strict)
+
+You can specify organisation names instead of domains with the flag `-o`, instead of `-d`.
+If  you want to explore a list of github repositories instead, you can use the flag `-r`.
+
+The results will be stored in an Mongo database. It can be accessed via the `mongosh` or Mongo Express interface available at http://localhost:8081/ (if you ran it via docker compose up). 
+
+The terminal will present the information about the status of the scan:
 
 ![Execution](img/execution.png "The tool will report existsent and not existent packages in public repositories")
 
-Depscanner will report the package as missing if it finds a 404 response. It will backoff for some time if it finds a 429 Rate Limit Exceeded response:
+Depscanner will report the package as missing if it finds a 404 response. 
+It will backoff for some time if it finds a 429 Rate Limit Exceeded response:
 ![Backoff](img/backoff.png "Backoff from a rate limit exceeded")
-
-The tool only mandatory flag is the input file (domains with `-d`, organisation names with `-o`, or github repository names with `-r`), and the GitHub PAT token to access their API.
-
-The results of each search will be stored in an sqlite3 database, so you can explore the DB at will. The tables in the DB are repositories, packages, and repository_dependency (to link the first two tables), so you can query what repository requires what package or vice versa. 
 
 Optionally, you can provide a webhook to Discord with the flag `-W` to receive notifications of orphan packages.
 ![Discord notifications](img/discord.png "Discord notifications")
@@ -80,19 +103,20 @@ For debugging purposes, you can also specify an HTTP proxy to send the request t
 
 To speed up the analysis and reduce the number of times you hit a Rate Limit on GitHub's API, you can filter the repositories to analyse by number of stars with the parameter `-s <number>`. Any repository with less stars than <number> will not be analysed.
 
-### Web Interface
+## Web Interface
 The web interface is based in python's Flask package.
-Launch the web interface by either executing the following:
-```
-cd web && flask run --port 8015
-```
 
-Or running the script:
+If you installed the tool by using `launch.sh` or `mongo compose`, the web interface should already be running in http://localhost:8015/. 
+
+If you installed this tool manually via requirements.txt (not recommended), you have to launch the web interface manually like this:
 ```
+# Go to the web folder and launch flask server
+cd web && flask run --port 8015
+# Or running the script:
 ./web.sh
 ```
 
-Once you have the application running access http://localhost:8005.
+Once you have the application running access http://localhost:8015.
 You will have to upload your domain/organisation/repositories list source file from the "Upload" tab. 
 Select the type of file you are uploading and your file:
 
@@ -114,21 +138,3 @@ Due to GitHub API strict rate limit, the tool has been programmed to avoid any u
 The information stored in the local database is refreshed frequently. The refresh rate depends on the hours specified in the `config.yml` file. The attribute `db_refresh_hours` specify when the data is considered outdated and should be retrieved again from the GitHub API or public registries. Each document in the database has an `updated` attribute used to compare today's date with when this document was updated the last time. Then, the application takes the decision on whether download/refresh the data or not.
 
 If you want to see the information stored in the MongoDB, navigate to http://localhost:8081/, where a Mongo Express should be listening.
-
-# Running the tool
-
-For example, can be run directly:
-```bash
-./depscan.py -t <yourtoken> --dbfile depscanner.db --webhook "https://discord.com/api/webhooks/<id>"
-```
-
-Or using docker mapping a volume to provide your own organisation's domains to search:
-```bash
-mkdir mylists
-cp mydomains.txt mylists/
-docker run -v $(PWD)/mylists:/app/mylists --rm -it depscanner-depscanner -t <yourtoken> -d mylists/mydomains.txt
-```
-
-You can specify organisation names instead of domains with the flag `-o`, instead of `-d`.
-If  you want to explore a list of github repositories instead, you can use the flag `-r`.
-
