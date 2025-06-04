@@ -1,0 +1,36 @@
+api_base: "https://api.github.com"
+# TODO: It makes more sense to have a dict of language and depfile mapping, and that maps to a public repo as well
+# Then, we can just look for the depfile names of that language.
+lang_repos: 
+  Python: pypi.org
+  JavaScript: registry.npmjs.org
+  TypeScript: registry.npmjs.org
+  Ruby: rubygems.org
+  Go: pkg.go.dev
+repos_depfiles:
+    pypi.org:
+        - poetry.toml
+        - Pipfile
+        - requirements.txt
+    registry.npmjs.org: ["package.json"]
+    rubygems.org: ["Gemfile"]
+    pkg.go.dev: ["go.mod"]
+
+pub_repos:
+  requirements.txt: pypi.org
+  poetry.toml: pypi.org
+  Pipfile: pypi.org
+  package.json: registry.npmjs.org
+  Gemfile: rubygems.org
+  go.mod: pkg.go.dev
+mongo:
+  host: mongo-db
+  port: 27017
+  username: root
+  password: ${MONGO_PASSWD} # This will be replaced by the tool `envsubst` during docker compose up operation
+  database: depscanner
+
+jitter: 3
+backoffbase: 45
+db_refresh_hours: 96
+request_timeout: 30 

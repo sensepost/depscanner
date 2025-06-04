@@ -1,0 +1,11 @@
+setuptools
+toml
+requests
+pyyaml
+sqlalchemy
+discord-webhook
+tld
+semver
+pymongo
+inflect
+flask

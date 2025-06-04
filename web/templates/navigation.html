@@ -1,0 +1,31 @@
+<ul class="nav nav-tabs justify-content-center">
+    <li class="nav-item">
+        <a class="nav-link" id="run-tab" href="/run">Run</a>   
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="missing-tab" href="/missing-packages">Missing Packages</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="upload-tab" href="/upload">Upload</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="logs-tab" href="/logs">Logs</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="home-tab" href="/">What Is This?</a>
+    </li>
+</ul>
+
+<script>
+    // Set active tab based on current URL
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentPath = window.location.pathname;
+        const links = document.querySelectorAll('.nav-link');
+        links.forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+                link.setAttribute('aria-current', 'page');
+            }
+        });
+    });
+</script>

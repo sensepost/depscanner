@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DepScanner UI</title>
+  {% include 'headers.html' %}
+</head>
+<body class="p-4 bg-light">
+  <div class="container">
+    <h1 class="mb-4 text-center">🔍 DepScanner 🔍</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% include 'navigation.html' %}
+
+    <div class="mb-3">
+      <div class="text-center mb-4 mt-4">
+        <img src="{{url_for('static', filename='img/depscanner.png')}}" alt="DepScanner Logo">
+      </div>
+      <div>
+        <h1>
+          What is DepScanner?
+        </h1>
+        <p>
+          DepScanner purpose is to detect public repository dependencies in github of some organisations with an orphan required library. This is, the library does not exists in public repositories for that language. 
+        </p>
+        <p>
+          For example, a github project may define a requirements.txt with a package name 'internal-package'. 
+          DepScanner will loop throught the public projects in each organisation tyring to find the library requirements definition file appropriate to that language. Then, it will try to search for that package in their repo, for example, for Python packages, it will search in pypi.org, or for Golang it will search the package in "pkg.go.dev.
+        </p>
+        <p>
+          The results will be stored in the MongoDB database "depscanner".
+          Three different collections will be created:
+          <ul>
+            <li><b>repositories</b>: It contains the GitHub repositories downloaded from GitHub API.</li>
+            <li><b>packages</b>: It contains the packages found in the repositories.</li>
+            <li><b>dependencies</b>: It contains the dependencies between repositories and packages.</li>
+            <li><b>explored_orgs</b>: It contains a list of explored organisation names.</li>
+            <li><b>scopes</b>: For npmjs.org packages, the information of packages scopes is stored here.</li>
+          </ul>
+        </p>
+        <p>
+          If you want to explore the database directly, there is a Mongo Express interface in <a href="http://localhost:8081/db/depscanner/">http://localhost:8081</a>.
+        </p>
+        
+        <h1>Usage</h1>
+        It can be used via the CLI interface or the web interface (this).
+        <h2>Web</h2>
+        <h3>Web Usage</h3>
+        <p>
+          To use DepScanner via this web interface, simply go to <a href="/upload">upload</a>, and upload a text containing the following:
+          <ul>
+            <li>GitHub organization names</li>
+            <li>GitHub repository names</li>
+            <li>Domain names</li>
+          </ul>
+          The file should be in plain text format, with one entry per line.
+        </p>
+        <p>
+          After uploading the file, the scanner will process it and display the results on the screen. You can view the details of each package, including its name, presence, response code, scope response code, registry, and last update.
+        </p>
+        <p>
+          To get started, click the "Upload" button below and select your file.
+        </p>
+        <h2>CLI</h2>
+        <h3>Installation</h3>
+        <h3>CLI Usage</h3>
+      </div>
+    </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

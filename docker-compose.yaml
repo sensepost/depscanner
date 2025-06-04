@@ -1,0 +1,48 @@
+name: depscanner
+
+services:
+  mongo-db:
+    image: mongo:latest
+    restart: always
+    container_name: mongo-db
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=depscanner
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWD}
+    volumes:
+      - ./mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./db/mongo:/data/db
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - "127.0.0.1:8081:8081"
+    depends_on:
+      - mongo-db
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWD}
+      ME_CONFIG_MONGODB_URL: mongodb://root:${MONGO_PASSWD}@mongo-db:27017/
+      ME_CONFIG_BASICAUTH: false
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - mongo-db
+    ports:
+     - "8015:8015"
+    environment:
+      - MONGO_URI=mongodb://root:${MONGO_PASSWD}@mongo-db:27017/depscanner
+      - MONGO_PASSWD=${MONGO_PASSWD}
+    command: ["/bin/sh", "-c", "cp /app/config.yml /app/config-original.yml && envsubst < /app/config-original.yml > /app/config.yml && cd web && flask run --host=0.0.0.0 --port=8015"]
+    volumes:
+      - ./db:/app/db
+      - ./logs:/app/logs
+      - ./input:/app/input
+      - ./web/logs:/app/web/logs
+
+
+

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Missing Packages</title>
+  {% include 'headers.html' %}
+  <!-- Add these in the <head> section -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+</head>
+<body class="p-4 bg-light">
+  <div class="container">
+    <h1 class="mb-4 text-center">📦 Missing Packages</h1>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+      {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% include 'navigation.html' %}
+
+    <!-- Table for PyPI Packages -->
+    <div class="mt-4">
+      <h3>PyPI Packages</h3>
+      <table id="pypi-packages-table" class="table table-striped table-bordered align-middle">
+        <thead>
+          <tr>
+            <th>Package Name</th>
+            <th>Response Code</th>
+            <th>URL</th>
+            <th>Last Update</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for pkg in pypi_packages %}
+          <tr>
+            <td>{{ pkg.name }}</td>
+            <td>{{ pkg.response_code }}</td>
+            <td><a href="{{ pkg.url }}">{{ pkg.url }}</a></td>
+            <td>{{ pkg.updated }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Table for NPM Packages -->
+    <div class="mt-4">
+      <h3>NPM Packages</h3>
+      <table id="npm-packages-table" class="table table-striped table-bordered align-middle">
+        <thead>
+          <tr>
+            <th>Package Name</th>
+            <th>Response Code</th>
+            <th>Scope Response</th>
+            <th>URL</th>
+            <th>Last Update</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for pkg in npm_packages %}
+          <tr>
+            <td>{{ pkg.name }}</td>
+            <td>{{ pkg.response_code }}</td>
+            <td>{{ pkg.scope_response_code }}</td>
+            <td><a href="{{ pkg.url }}">{{ pkg.url }}</a></td>
+            <td>{{ pkg.updated }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Table for RubyGems Packages -->
+    <div class="mt-4">
+      <h3>RubyGems Packages</h3>
+      <table id="ruby-packages-table" class="table table-striped table-bordered align-middle">
+        <thead>
+          <tr>
+            <th>Package Name</th>
+            <th>Response Code</th>
+            <th>URL</th>
+            <th>Last Update</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for pkg in ruby_packages %}
+          <tr>
+            <td>{{ pkg.name }}</td>
+            <td>{{ pkg.response_code }}</td>
+            <td><a href="{{ pkg.url }}">{{ pkg.url }}</a></td>
+            <td>{{ pkg.updated }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Table for Go Packages -->
+    <div class="mt-4">
+      <h3>Go Packages</h3>
+      <table id="go-packages-table" class="table table-striped table-bordered align-middle">
+        <thead>
+          <tr>
+            <th>Package Name</th>
+            <th>Response Code</th>
+            <th>URL</th>
+            <th>Last Update</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for pkg in go_packages %}
+          <tr>
+            <td>{{ pkg.name }}</td>
+            <td>{{ pkg.response_code }}</td>
+            <td><a href="{{ pkg.url }}">{{ pkg.url }}</a></td>
+            <td>{{ pkg.updated }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      // Initialize DataTables for each table
+      $('#go-packages-table').DataTable();
+      $('#pypi-packages-table').DataTable();
+      $('#npm-packages-table').DataTable();
+      $('#ruby-packages-table').DataTable();
+    });
+  </script>
+</body>
+</html>

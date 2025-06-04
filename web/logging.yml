@@ -1,0 +1,48 @@
+version: 1
+disable_existing_loggers: false
+formatters:
+  brief:
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  precise:
+    format: "%(asctime)s - %(levelname)s %(name)s.%(funcName)s(): %(message)s"
+handlers:
+  console:
+    class : logging.StreamHandler
+    formatter: brief
+    level   : INFO
+    stream  : ext://sys.stdout
+  file_root:
+    class : logging.handlers.RotatingFileHandler
+    formatter: brief
+    level: DEBUG
+    filename: logs/root.log
+    maxBytes: 1000000
+    backupCount: 3
+  file_web:
+    class : logging.handlers.RotatingFileHandler
+    formatter: brief
+    level: DEBUG
+    filename: logs/web.log
+    maxBytes: 1000000
+    backupCount: 3
+  file_thread:
+    class : logging.handlers.RotatingFileHandler
+    formatter: brief
+    level: DEBUG
+    filename: logs/depscanner.log
+    maxBytes: 1000000
+    backupCount: 3
+loggers:
+  root:
+    level: DEBUG
+    handlers:
+    - console
+    - file_root
+  depScannerWeb:
+    level: INFO
+    handlers:
+    - file_web
+  depScannerThread:
+    level: DEBUG
+    handlers:
+    - file_thread

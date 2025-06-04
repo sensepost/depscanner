@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Logs</title>
+  {% include 'headers.html' %}
+  <script src="{{ url_for('static', filename='js/logs.js') }}" type="text/javascript"></script>
+  <style>
+    #log-container {
+      height: 500px;
+      width: 100%;
+      background-color: #000; /* Black background */
+      color: #0f0; /* Green text */
+      border: 1px solid #333; /* Dark gray border */
+      padding: 10px;
+      font-family: monospace; /* Monospace font for terminal-like appearance */
+      overflow-y: scroll;
+      resize: none;
+    }
+
+    #log-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #log-container::-webkit-scrollbar-thumb {
+      background-color: #444; /* Dark gray scrollbar thumb */
+      border-radius: 4px;
+    }
+
+    #log-container::-webkit-scrollbar-track {
+      background-color: #222; /* Darker gray scrollbar track */
+    }
+
+    #log-list {
+      height: 500px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      padding: 10px;
+      background-color: #f8f9fa;
+    }
+
+    #log-list ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    #log-list li {
+      cursor: pointer;
+      padding: 5px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    #log-list li:hover {
+      background-color: #e9ecef;
+    }
+  </style>
+</head>
+<body class="p-4 bg-light">
+  <div class="container">
+    <h1 class="mb-4 text-center">📜 Logs</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% include 'navigation.html' %}
+
+    <div class="row">
+      <!-- Left Panel: Log File List -->
+      <div class="col-md-4 mt-2" id="log-file-list">
+        <h5>Log Files</h5>
+        <ul>
+          {% for file in log_files %}
+          <li onclick="selectLogFile('{{ file }}')">{{ file }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <!-- Right Panel: Log Content -->
+      <div class="col-md-8 mt-2">
+        <textarea readonly id="log-container"></textarea>
+        <button id="download-log-button" class="btn btn-primary mt-2" onclick="downloadLogFile()" disabled>
+          Download Log File
+        </button>
+      </div>
+  </div>
+
+  <script>
+    // Update the log content every 5 second
+    setInterval(fetchLogContent, 5000);
+  </script>
+</body>
+</html>
