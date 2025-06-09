@@ -10,3 +10,11 @@ web/uploads/domains/*.txt
 web/uploads/organizations/*.txt
 web/uploads/repositories/*.txt
 *.drawio
+*.swp
+.env
+*.DS_Store
+*.egg-info
+__pycache__/
+*.egg
+*.pyo
+*.pyd

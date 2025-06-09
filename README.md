@@ -21,7 +21,18 @@ If the library does not exits, it will optionally notify you to your discord cha
 To boot the tool for the first time, you can just launch the script `./launch.sh`.
 Alternatively, you can install by issuing the command (**Disclaimer**: Please, change the Mongo database password):
 ```bash
+git clone https://github.com/sensepost/depscanner
+cd depscanner
+./launch.sh
+
+# ===========
+# Or alternatively execute docker compose manually:
 MONGODB_PASSWD=Test123 docker compose up -d # or execute ./launch.sh
+
+# ===========
+# Or use an .env file if you are using Windows
+echo 'MONGODB_PASSWD=Test123' > .env
+docker compose up -d
 ```
 
 After the infrastructure is deployed, you can run the CLI like this:
