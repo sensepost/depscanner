@@ -38,7 +38,8 @@ docker compose up -d
 After the infrastructure is deployed, you can run the CLI like this:
 
 ```bash
-docker run --rm -it depscanner-web depscanner -h
+# Get the help
+docker exec -it depscanner-web depscanner -h
 usage: usage: depscan.py [-h] (-d DOMAINS | -o ORGS | -r REPOS) [-s STARS] [-t TOKEN] [-P PROXY] [-W WEBHOOK] [-F] [-L {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
 
 Find missing dependencies in Python, JavaScript, TypeScript, Ruby, and Golang projects
@@ -65,6 +66,8 @@ sources:
   -o ORGS, --orgs ORGS  File containing GitHub organisation names
   -r REPOS, --repos REPOS
                         File containing GitHub repository names
+
+# Run a 
 ```
 
 ## From requirements.txt (not recommended):

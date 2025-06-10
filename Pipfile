@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+toml = "*"
+requests = "*"
+pyyaml = "*"
+sqlalchemy = "*"
+discord-webhook = "*"
+tld = "*"
+semver = "*"
+pymongo = "*"
+inflect = "*"
+flask = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.13"
