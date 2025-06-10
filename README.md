@@ -91,7 +91,7 @@ If you installed the tool via `docker compose up -d`, you can run the CLI like t
 ```bash
 mkdir mylists
 cp mydomains.txt mylists/
-docker run -v $(PWD)/mylists:/app/mylists --rm -it depscanner-web depscanner -t <yourtoken> -d mylists/mydomains.txt -W <discord webhook>
+docker exec -it depscanner-web depscanner  -d input/domains.txt -t github_pat_[...] -L DEBUG --webhook https://discord.com/api/webhooks/[...]
 ```
 
 The only mandatory flags are:
