@@ -67,7 +67,8 @@ sources:
   -r REPOS, --repos REPOS
                         File containing GitHub repository names
 
-# Run a 
+# Run a basic scan and send the status to your Discord channel
+docker exec -it depscanner-web depscanner  -d input/domains.txt -t github_pat_[...] -L DEBUG --webhook https://discord.com/api/webhooks/[...]
 ```
 
 ## From requirements.txt (not recommended):
