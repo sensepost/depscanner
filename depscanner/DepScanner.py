@@ -268,15 +268,17 @@ class DepScanner:
         # Request package info from the final URL.
         # Using HEAD request to avoid downloading the package info
         MAX_RETRIES=5
+        MAX_REQUEST_RETRIES=5
         success_search_pubrepo = False
         repos_wall_hit_times = 0
+        request_error_count = 0
         # Prepend the schema if not found in the url
         package_url = package_object.url
         if "://" not in package_url:
             package_url = "https://" + package_url
         package_netloc = urlparse(package_url).netloc
 
-        while not success_search_pubrepo and repos_wall_hit_times<MAX_RETRIES:
+        while not success_search_pubrepo and repos_wall_hit_times<MAX_RETRIES and request_error_count<MAX_REQUEST_RETRIES:
             try:
                 # Get the information from the registry URL
                 headers = {
@@ -292,6 +294,8 @@ class DepScanner:
                 )
             except requests.exceptions.RequestException as re:
                 self.logger.error(f"Exception when contacting the HTTP server: {re}")
+                request_error_count+=1
+                break
 
             # Now, fill up the package object information
             try:
