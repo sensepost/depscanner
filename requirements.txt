@@ -1,4 +1,4 @@
-setuptools
+setuptools < 82
 toml
 requests
 pyyaml
