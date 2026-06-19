@@ -1,4 +1,4 @@
-setuptools < 82
+setuptools
 toml
 requests
 pyyaml
@@ -9,3 +9,4 @@ semver
 pymongo
 inflect
 flask
+packaging
