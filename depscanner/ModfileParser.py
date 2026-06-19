@@ -6,7 +6,7 @@ import logging
 import requests
 import toml
 import semver
-from pkg_resources import parse_requirements as setuptools_parse_requirements
+from packaging.requirements import Requirement, InvalidRequirement
 
 from collections import namedtuple
 
@@ -50,8 +50,77 @@ class ModfileParser:
 
         return dependencies
 
+    def _iter_requirement_lines(self, content: str):
+        """
+        Yield logical requirement lines from a requirements.txt-style file.
+        Handles:
+        - blank lines and comments
+        - line continuations with a trailing backslash
+        - inline comments (a literal '#', not part of a VCS URL fragment)
+        - option lines (-r, -e, --hash, etc.) which are skipped, since they
+          aren't a name/URL based requirement we can model with DependencyInfo
+        """
+        buffer = ""
+        for raw_line in content.splitlines():
+            line = raw_line.rstrip("\n")
+
+            # Handle line continuations (a line ending in backslash joins with the next)
+            if buffer:
+                line = buffer + line
+                buffer = ""
+            if line.endswith("\\"):
+                buffer = line[:-1]
+                continue
+
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+
+            # Skip pip option lines, they aren't requirements themselves
+            if stripped.startswith("-"):
+                continue
+
+            # Strip inline comments, but avoid chopping VCS URL fragments
+            # (e.g. git+https://...#egg=pkg) by only treating " #" as a comment marker
+            comment_idx = stripped.find(" #")
+            if comment_idx != -1:
+                stripped = stripped[:comment_idx].strip()
+
+            if stripped:
+                yield stripped
+
+        if buffer.strip():
+            yield buffer.strip()
+
+    _VCS_PREFIXES = ("git+", "hg+", "svn+", "bzr+")
+
+    def _parse_bare_url_line(self, line: str) -> DependencyInfo:
+        """
+        Handle legacy-style bare URL/VCS requirement lines that pkg_resources
+        accepted but are not valid PEP 508 syntax for `packaging.Requirement`,
+        e.g.:
+          git+https://github.com/org/pkg.git@master#egg=pkg
+          https://example.com/pkg.tar.gz
+        Try to recover a package name from the '#egg=' fragment if present,
+        otherwise fall back to the last path segment of the URL.
+        """
+        name = None
+        egg_match = re.search(r"[#&]egg=([^&]+)", line)
+        if egg_match:
+            name = egg_match.group(1)
+        else:
+            path = urlparse(line.split("#")[0]).path
+            base = path.rstrip("/").rsplit("/", 1)[-1]
+            # Strip common archive/version suffixes to approximate a package name
+            name = re.sub(r"\.(tar\.gz|tgz|zip|whl)$", "", base)
+
+        depinfo = DependencyInfo(name=name, semver_string="*", url=line)
+        if "#" in line:
+            depinfo.semver = line.split("#")[-1]
+        return depinfo
+
     # optionally, environment markers
-    def _parse_requirement_line(self, req) -> DependencyInfo:
+    def _parse_requirement_line(self, req: Requirement) -> DependencyInfo:
         """Parse a single requirement line into structured data.
         https://pip.pypa.io/en/stable/reference/requirement-specifiers/#overview
         A requirement specifier comes in two forms:
@@ -69,7 +138,7 @@ class ModfileParser:
             name=req.name,
             semver_string="*",
             url=""
-        ) 
+        )
 
         # Handle URL-based requirements
         if req.url:
@@ -78,11 +147,12 @@ class ModfileParser:
             if "#" in req.url:
                 depinfo.semver = req.url.split("#")[-1]
         # Handle version specifiers
-        elif req.specs:
-            # Convert specs list like [('>=', '1.0'), ('<=', '2.0')] to string
-            semver_specs = []
-            for operator, version in req.specs:
-                semver_specs.append(f"{operator}{version}")
+        elif req.specifier:
+            # Convert a SpecifierSet like ">=1.0,<=2.0" into a comma-separated
+            # string of "<operator><version>" pairs, same shape as before
+            semver_specs = [
+                f"{spec.operator}{spec.version}" for spec in req.specifier
+            ]
             depinfo.semver = ",".join(semver_specs)
 
         return depinfo
@@ -111,11 +181,20 @@ class ModfileParser:
         )
         if response.status_code == 200:
             decoded_content = b64decode(response.json()["content"]).decode("utf-8")
-            try:
-                for req in setuptools_parse_requirements(decoded_content):
+            for line in self._iter_requirement_lines(decoded_content):
+                try:
+                    req = Requirement(line)
                     dependencies.append(self._parse_requirement_line(req))
-            except Exception as e:
-                self.logger.debug(f"Error parsing the file {item['name']}: {e}")
+                except InvalidRequirement as e:
+                    # packaging.Requirement only accepts PEP 508 syntax (name @ url).
+                    # Older-style bare URLs/VCS refs (e.g. "git+https://...#egg=pkg")
+                    # that pkg_resources used to accept will land here instead.
+                    if line.startswith(self._VCS_PREFIXES) or self.is_url(line):
+                        dependencies.append(self._parse_bare_url_line(line))
+                    else:
+                        self.logger.debug(
+                            f"Error parsing requirement line '{line}' in {item['name']}: {e}"
+                        )
         return dependencies
 
     def get_and_parse_pipfile(self, item) -> list:

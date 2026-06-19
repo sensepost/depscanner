@@ -9,3 +9,4 @@ semver
 pymongo
 inflect
 flask
+packaging
